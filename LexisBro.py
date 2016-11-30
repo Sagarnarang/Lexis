@@ -1,18 +1,20 @@
-import nltk, string, os,random
-from sklearn.feature_extraction.text import TfidfVectorizer
-from operator import itemgetter
-from pymongo import MongoClient
-from gtts import gTTS
-import os, curses
+import os
 import sys
-from multiprocessing import Process
+from operator import itemgetter
 from time import sleep
+
+import nltk
+import random
+import string
 from colorama import init, Fore
+from gtts import gTTS
+from pymongo import MongoClient
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 init()
 
 # from engine import Engine
-name=''
+name = ''
 list_query = []
 dict_collections = {}
 
@@ -26,23 +28,23 @@ dict_collections['st'] = 'state'
 dict_collections['lake'] = 'lake'
 dict_collections['river'] = 'river'
 dict_collections['rivers'] = 'river'
-goodbyes= [
+goodbyes = [
     "Thank you for talking with me.",
     "Good-bye.",
     "Thank you, that will be $150.  Have a good day!"]
-choices=["I see. ,"+name,
-    "Very interesting. "+name,
-    "...Let me think "+name,
-    ".....Gimme a second "+name,
-    "Lemme find it out for you "+name]
+choices = ["I see. ," + name,
+           "Very interesting. " + name,
+           "...Let me think " + name,
+           ".....Gimme a second " + name,
+           "Lemme find it out for you " + name]
 
-alternative=["Sorry, could not found this. " +name,
-"I dont have answer to this question. "+name,
-"Well, this is out of my range. " +name,
-"Sorry "+name+"! Could not find the exact location.",
-name+",Don't you think California is a better place to search for.",
-"Not Found. "+name+" Please ask for something else.",
-"Not a cool place, please search for any other place."]
+alternative = ["Sorry, could not found this. " + name,
+               "I dont have answer to this question. " + name,
+               "Well, this is out of my range. " + name,
+               "Sorry " + name + "! Could not find the exact location.",
+               name + ",Don't you think California is a better place to search for.",
+               "Not Found. " + name + " Please ask for something else.",
+               "Not a cool place, please search for any other place."]
 
 db = ''
 corpus = []
@@ -61,7 +63,6 @@ def print_color(words):
         sys.stdout.flush()
 
 
-
 def speak(audioString, notprint):
     if notprint:
         print_color("\t\t\t\t" + audioString + '\n')
@@ -74,7 +75,7 @@ def ask(sentence):
     tts = gTTS(text=sentence, lang='en')
     tts.save("audio.mp3")
     os.system("mpg321 audio.mp3 >/dev/null 2>&1")
-    name = raw_input("\t\t\t\t" + sentence+'\n'+'\t\t\t\t>>>>>')
+    name = raw_input("\t\t\t\t" + sentence + '\n' + '\t\t\t\t>>>>>')
     return name
 
 
@@ -97,10 +98,10 @@ def setup():
 
 
 def question_processing(ques):
-    global corpus,name,list_query
-    list_query=[]
+    global corpus, name, list_query
+    list_query = []
     # corpus=[]
-    speak (random.choice(choices)+' '+name, False)
+    speak(random.choice(choices) + ' ' + name, False)
     # Step1: Generate all tokens
     tokens = nltk.word_tokenize(ques)
     # Step2: Part of Speech tagging of the question
@@ -126,7 +127,7 @@ def question_processing(ques):
 
     # Aggerate all the Documents from the list of Collections
     db.cursor = db.questions.find()
-    corpus=[]
+    corpus = []
     for i in db.cursor:
         for t in collection_name:
             if t in i:
@@ -171,7 +172,7 @@ def find_similartiy():
     sorted(refined_corpus.items(), key=itemgetter(1), reverse=True)
 
     if not bool(refined_corpus):
-        speak(random.choice(alternative),True)
+        speak(random.choice(alternative), True)
         return
     # find the maximum match count
     max_count = max(refined_corpus.items(), key=itemgetter(1))[1]
@@ -198,42 +199,42 @@ def find_similartiy():
     if max_count > 1:
         sayVal = str(keys[:count][0])
         # print("FINAL RESULT---->", sayVal)
-        speak(sayVal,True)
+        speak(sayVal, True)
     else:
         # print("FINAL RESULT::: else---->", keys[0])
-        speak(keys[0],True)
+        speak(keys[0], True)
     return
 
 
 def main():
     os.system('clear')
-    global list_query,name
+    global list_query, name
     print_color("\t\t\t\t\t\t\t\tLexis\n")
     for i in range(8):
         print("\t\t\t\t" + '=' * 72)
     print("\t\t\t\t" + '=' * 72)
     setup()
     speak('My name is Lexis !', True)
-    name=ask('What is your Name?')
-    speak('Hello '+name+' !',True)
-    speak('I am the bot that helps you with all your queries related to Geography!',True)
-    speak("Talk to me by typing plain English.",True)
-    speak('Ask me about Cities',True)
-    speak('Or States',True)
-    speak('Or Rivers',True)
-    speak('Or Mountains in USA',True)
+    name = ask('What is your Name?')
+    speak('Hello ' + name + ' !', True)
+    speak('I am the bot that helps you with all your queries related to Geography!', True)
+    speak("Talk to me by typing plain English.", True)
+    speak('Ask me about Cities', True)
+    speak('Or States', True)
+    speak('Or Rivers', True)
+    speak('Or Mountains in USA', True)
     print("\t\t\t\t" + '=' * 72)
-    speak('To Kill me, type BYE!',True)
+    speak('To Kill me, type BYE!', True)
     for i in range(3):
         print("\t\t\t\t" + '=' * 72)
-    user_input = ask(name+', What would you like to ask me?')
+    user_input = ask(name + ', What would you like to ask me?')
     while True:
         question_processing(user_input)
         find_similartiy()
-        user_input = ask(name+' , What more would you like to ask me?')
+        user_input = ask(name + ' , What more would you like to ask me?')
         if user_input == 'BYE' or user_input == 'bye':
             break
-    speak(random.choice(goodbyes),True)
+    speak(random.choice(goodbyes), True)
 
 
 main()
